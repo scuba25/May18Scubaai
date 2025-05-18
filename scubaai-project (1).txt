@@ -1,0 +1,78 @@
+# ScubaAI Project
+
+This document outlines the structure and components of the ScubaAI project, a custom AI deployment using the Groq API.
+
+## Project Structure
+
+```
+scubaai/
+├── backend/
+│   ├── app.py               # Main Flask application
+│   ├── config.py            # Configuration settings
+│   ├── models.py            # Database models
+│   ├── routes/              # API routes
+│   │   ├── __init__.py
+│   │   ├── auth.py          # Authentication routes
+│   │   ├── chat.py          # Chat routes
+│   │   └── settings.py      # Settings routes
+│   ├── services/            # Business logic
+│   │   ├── __init__.py
+│   │   ├── ai_service.py    # AI interaction service
+│   │   ├── auth_service.py  # Authentication service
+│   │   └── settings_service.py # Custom instructions service
+│   └── requirements.txt     # Python dependencies
+├── frontend/
+│   ├── public/              # Static files
+│   │   ├── favicon.ico
+│   │   └── index.html
+│   ├── src/
+│   │   ├── App.js           # Main React component
+│   │   ├── components/      # React components
+│   │   │   ├── Chat.jsx
+│   │   │   ├── Login.jsx
+│   │   │   ├── Settings.jsx
+│   │   │   └── Sidebar.jsx
+│   │   ├── services/        # API client services
+│   │   │   ├── api.js
+│   │   │   ├── authService.js
+│   │   │   └── chatService.js
+│   │   └── index.js         # Entry point
+│   ├── package.json         # NPM dependencies
+│   └── webpack.config.js    # Webpack configuration
+├── docs/                    # Documentation
+├── docker-compose.yml       # Docker composition
+├── Dockerfile.backend       # Backend Docker configuration
+├── Dockerfile.frontend      # Frontend Docker configuration
+└── README.md                # Project documentation
+```
+
+## Technology Stack
+
+- **Backend**:
+  - Flask (Python web framework)
+  - SQLAlchemy (ORM)
+  - PostgreSQL (Database)
+  - Groq API (AI provider)
+
+- **Frontend**:
+  - React.js
+  - Axios (API client)
+  - TailwindCSS (Styling)
+
+- **Deployment**:
+  - Docker & Docker Compose
+  - Nginx (Reverse proxy)
+  - Gunicorn (WSGI server)
+  - Let's Encrypt (SSL)
+
+## Functionality
+
+1. User authentication and management
+2. Chat interface for AI interaction
+3. Custom instructions management
+4. Conversation history storage
+5. System settings configuration
+
+## Deployment Instructions
+
+Detailed deployment instructions are included in the setup files. The system is designed to be easily deployed on a Linode VPS with minimal configuration.

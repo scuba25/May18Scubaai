@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:13-alpine
+    container_name: scubaai_postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=scubaai
+      - POSTGRES_PASSWORD=scubaai_db_password
+      - POSTGRES_DB=scubaai
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U scubaai"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Flask Backend
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: scubaai_backend
+    depends_on:
+      - postgres
+    environment:
+      - FLASK_ENV=production
+      - DATABASE_URL=postgresql://scubaai:scubaai_db_password@postgres:5432/scubaai
+      - SECRET_KEY=${SECRET_KEY:-change_me_in_production}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-change_me_in_production}
+      - GROQ_API_KEY=${GROQ_API_KEY:-your_groq_api_key}
+      - GROQ_MODEL=${GROQ_MODEL:-llama3-8b-8192}
+      - ADMIN_INITIAL_PASSWORD=${ADMIN_INITIAL_PASSWORD:-scubaadmin}
+      - CORS_ORIGIN=http://localhost:3000
+    ports:
+      - "5000:5000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # React Frontend
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: scubaai_frontend
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    environment:
+      - REACT_APP_API_URL=http://localhost:5000/api
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  postgres_data:
+    name: scubaai_postgres_data

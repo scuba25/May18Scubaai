@@ -1,0 +1,79 @@
+    return jsonify({
+        'message': 'System setting updated successfully',
+        'system_setting': setting.to_dict()
+    }), 200
+
+@settings_bp.route('/system/<int:setting_id>', methods=['DELETE'])
+@jwt_required()
+def delete_system_setting(setting_id):
+    """Delete a system setting (admin only)."""
+    if not current_user.is_admin:
+        return jsonify({'error': 'Admin access required'}), 403
+    
+    setting = SystemSetting.query.get(setting_id)
+    if not setting:
+        return jsonify({'error': 'System setting not found'}), 404
+    
+    db.session.delete(setting)
+    db.session.commit()
+    
+    return jsonify({'message': 'System setting deleted successfully'}), 200
+
+@settings_bp.route('/system/<string:key>', methods=['GET'])
+@jwt_required()
+def get_system_setting_by_key(key):
+    """Get a system setting by key."""
+    setting = SystemSetting.query.filter_by(key=key).first()
+    if not setting:
+        return jsonify({'error': 'System setting not found'}), 404
+    
+    return jsonify({'system_setting': setting.to_dict()}), 200
+
+# User preferences endpoints
+@settings_bp.route('/preferences', methods=['GET'])
+@jwt_required()
+def get_user_preferences():
+    """Get user preferences."""
+    # You can expand this to include user-specific preferences
+    # For now, we'll return the user's default custom instruction
+    default_instruction = CustomInstruction.query.filter_by(
+        user_id=current_user.id,
+        is_default=True
+    ).first()
+    
+    preferences = {
+        'default_custom_instruction': default_instruction.to_dict() if default_instruction else None,
+        'user': current_user.to_dict()
+    }
+    
+    return jsonify({'preferences': preferences}), 200
+
+@settings_bp.route('/export', methods=['GET'])
+@jwt_required()
+def export_user_data():
+    """Export user data including conversations and custom instructions."""
+    from models import Conversation, Message
+    
+    # Get user's conversations and messages
+    conversations = Conversation.query.filter_by(user_id=current_user.id).all()
+    custom_instructions = CustomInstruction.query.filter_by(user_id=current_user.id).all()
+    
+    export_data = {
+        'user': current_user.to_dict(),
+        'custom_instructions': [ci.to_dict() for ci in custom_instructions],
+        'conversations': []
+    }
+    
+    for conv in conversations:
+        messages = Message.query.filter_by(conversation_id=conv.id)\
+                              .order_by(Message.created_at.asc())\
+                              .all()
+        
+        conv_data = conv.to_dict()
+        conv_data['messages'] = [msg.to_dict() for msg in messages]
+        export_data['conversations'].append(conv_data)
+    
+    return jsonify({
+        'message': 'User data exported successfully',
+        'data': export_data
+    }), 200
